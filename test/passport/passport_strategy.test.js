@@ -53,7 +53,7 @@ describe('OpenIDConnectStrategy', () => {
     );
   });
 
-  it('checks for session presence', function (next) {
+  it('checks for session presence', async function (next) {
     const strategy = new Strategy({ client: this.client }, () => {});
 
     const req = new MockRequest('GET', '/login/oidc');
@@ -67,7 +67,7 @@ describe('OpenIDConnectStrategy', () => {
         next(err);
       }
     };
-    strategy.authenticate(req);
+    await strategy.authenticate(req);
   });
 
   describe('authenticate', function () {
@@ -92,7 +92,7 @@ describe('OpenIDConnectStrategy', () => {
 
       this.client.callback = sinon.spy();
 
-      strategy.authenticate(req, {});
+      await strategy.authenticate(req, {});
       sinon.assert.calledOnce(this.client.callback);
       sinon.assert.calledWith(
         this.client.callback,
@@ -105,7 +105,7 @@ describe('OpenIDConnectStrategy', () => {
   });
 
   describe('initate', function () {
-    it('starts authentication requests for GETs', function () {
+    it('starts authentication requests for GETs', async function () {
       const params = { foo: 'bar' };
       const strategy = new Strategy({ client: this.client, params }, () => {});
 
@@ -113,7 +113,7 @@ describe('OpenIDConnectStrategy', () => {
       req.session = {};
 
       strategy.redirect = sinon.spy();
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
 
       expect(params).to.eql({ foo: 'bar' });
       expect(strategy.redirect.calledOnce).to.be.true;
@@ -128,7 +128,7 @@ describe('OpenIDConnectStrategy', () => {
       );
     });
 
-    it('starts authentication requests for POSTs', function () {
+    it('starts authentication requests for POSTs', async function () {
       const strategy = new Strategy({ client: this.client }, () => {});
 
       const req = new MockRequest('POST', '/login/oidc');
@@ -136,7 +136,7 @@ describe('OpenIDConnectStrategy', () => {
       req.body = {};
 
       strategy.redirect = sinon.spy();
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
 
       expect(strategy.redirect.calledOnce).to.be.true;
       const target = strategy.redirect.firstCall.args[0];
@@ -150,7 +150,7 @@ describe('OpenIDConnectStrategy', () => {
       );
     });
 
-    it('can have redirect_uri and scope specified', function () {
+    it('can have redirect_uri and scope specified', async function () {
       const strategy = new Strategy(
         {
           client: this.client,
@@ -166,7 +166,7 @@ describe('OpenIDConnectStrategy', () => {
       req.session = {};
 
       strategy.redirect = sinon.spy();
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
 
       expect(strategy.redirect.calledOnce).to.be.true;
       const target = strategy.redirect.firstCall.args[0];
@@ -174,7 +174,7 @@ describe('OpenIDConnectStrategy', () => {
       expect(target).to.include('scope=openid%20profile');
     });
 
-    it('can have authorization parameters specified at runtime', function () {
+    it('can have authorization parameters specified at runtime', async function () {
       const strategy = new Strategy(
         {
           client: this.client,
@@ -190,14 +190,14 @@ describe('OpenIDConnectStrategy', () => {
       req.session = {};
 
       strategy.redirect = sinon.spy();
-      strategy.authenticate(req, { resource: 'urn:example:foo' });
+      await strategy.authenticate(req, { resource: 'urn:example:foo' });
 
       expect(strategy.redirect.calledOnce).to.be.true;
       const target = strategy.redirect.firstCall.args[0];
       expect(target).to.include(`resource=${encodeURIComponent('urn:example:foo')}`);
     });
 
-    it('automatically includes nonce for where it applies', function () {
+    it('automatically includes nonce for where it applies', async function () {
       const strategy = new Strategy(
         {
           client: this.client,
@@ -213,7 +213,7 @@ describe('OpenIDConnectStrategy', () => {
       req.session = {};
 
       strategy.redirect = sinon.spy();
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
 
       expect(strategy.redirect.calledOnce).to.be.true;
       const target = strategy.redirect.firstCall.args[0];
@@ -243,7 +243,7 @@ describe('OpenIDConnectStrategy', () => {
         }).to.throw('foobar is not valid/implemented PKCE code_challenge_method');
       });
 
-      it('can be set to use PKCE (S256)', function () {
+      it('can be set to use PKCE (S256)', async function () {
         const strategy = new Strategy(
           {
             client: this.client,
@@ -256,7 +256,7 @@ describe('OpenIDConnectStrategy', () => {
         req.session = {};
 
         strategy.redirect = sinon.spy();
-        strategy.authenticate(req);
+        await strategy.authenticate(req);
 
         expect(strategy.redirect.calledOnce).to.be.true;
         const target = strategy.redirect.firstCall.args[0];
@@ -266,7 +266,7 @@ describe('OpenIDConnectStrategy', () => {
         expect(req.session['oidc:op.example.com']).to.have.property('code_verifier');
       });
 
-      it('can be set to use PKCE (plain)', function () {
+      it('can be set to use PKCE (plain)', async function () {
         const strategy = new Strategy(
           {
             client: this.client,
@@ -279,7 +279,7 @@ describe('OpenIDConnectStrategy', () => {
         req.session = {};
 
         strategy.redirect = sinon.spy();
-        strategy.authenticate(req);
+        await strategy.authenticate(req);
 
         expect(strategy.redirect.calledOnce).to.be.true;
         const target = strategy.redirect.firstCall.args[0];
@@ -290,7 +290,7 @@ describe('OpenIDConnectStrategy', () => {
       });
     });
 
-    it('can have session key specifed', function () {
+    it('can have session key specifed', async function () {
       const strategy = new Strategy(
         {
           client: this.client,
@@ -303,7 +303,7 @@ describe('OpenIDConnectStrategy', () => {
       req.session = {};
 
       strategy.redirect = sinon.spy();
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
 
       expect(req.session).to.have.property('oidc:op.example.com:foo');
       expect(req.session['oidc:op.example.com:foo']).to.have.keys(
@@ -314,8 +314,8 @@ describe('OpenIDConnectStrategy', () => {
     });
   });
 
-  describe('callback', function () {
-    it('triggers the verify function and then the success one', function (next) {
+  describe('callback', async function () {
+    it('triggers the verify function and then the success one', async function () {
       const ts = { foo: 'bar' };
       sinon.stub(this.client, 'callback').callsFake(async () => ts);
 
@@ -324,8 +324,11 @@ describe('OpenIDConnectStrategy', () => {
         done(null, tokenset);
       });
 
+      let resolve;
+      const promise = new Promise(res => { resolve = res; });
+
       strategy.success = () => {
-        next();
+        resolve();
       };
 
       const req = new MockRequest('GET', '/login/oidc/callback?code=foobar&state=state');
@@ -337,10 +340,12 @@ describe('OpenIDConnectStrategy', () => {
         },
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      
+      return promise;
     });
 
-    it('triggers the error function when server_error is encountered', function (next) {
+    it('triggers the error function when server_error is encountered', async function () {
       const strategy = new Strategy({ client: this.client }, () => {});
 
       const req = new MockRequest('GET', '/login/oidc/callback?error=server_error&state=state');
@@ -352,39 +357,53 @@ describe('OpenIDConnectStrategy', () => {
         },
       };
 
+      let resolve, reject;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+
       strategy.error = (error) => {
         try {
           expect(error.error).to.equal('server_error');
-          next();
+          resolve();
         } catch (err) {
-          next(err);
+          reject(err);
         }
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      return promise;
     });
 
-    it('lets the dev know when most common problems with session occur', function (next) {
+    it('lets the dev know when most common problems with session occur', async function () {
       const strategy = new Strategy({ client: this.client }, () => {});
 
       const req = new MockRequest('GET', '/login/oidc/callback?code=code&state=foo');
       req.session = {};
+
+      let resolve, reject;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
 
       strategy.error = (error) => {
         try {
           expect(error.message).to.eql(
             'did not find expected authorization request details in session, req.session["oidc:op.example.com"] is undefined',
           );
-          next();
+          resolve();
         } catch (err) {
-          next(err);
+          reject(err);
         }
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      return promise;
     });
 
-    it('triggers the error function when non oidc error is encountered', function (next) {
+    it('triggers the error function when non oidc error is encountered', async function () {
       const strategy = new Strategy({ client: this.client }, () => {});
 
       sinon.stub(this.client, 'callback').callsFake(async () => {
@@ -400,19 +419,26 @@ describe('OpenIDConnectStrategy', () => {
         },
       };
 
+      let resolve, reject;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+
       strategy.error = (error) => {
         try {
           expect(error.message).to.equal('callback error');
-          next();
+          resolve();
         } catch (err) {
-          next(err);
+          reject(err);
         }
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      return promise;
     });
 
-    it('triggers the fail function when oidc error is encountered', function (next) {
+    it('triggers the fail function when oidc error is encountered', async function () {
       const strategy = new Strategy({ client: this.client }, () => {});
 
       const req = new MockRequest('GET', '/login/oidc/callback?error=login_required&state=state');
@@ -424,19 +450,26 @@ describe('OpenIDConnectStrategy', () => {
         },
       };
 
+      let resolve, reject;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+
       strategy.fail = (error) => {
         try {
           expect(error.error).to.equal('login_required');
-          next();
+          resolve();
         } catch (err) {
-          next(err);
+          reject(err);
         }
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      return promise;
     });
 
-    it('triggers the error function for errors during verify', function (next) {
+    it('triggers the error function for errors during verify', async function () {
       const strategy = new Strategy({ client: this.client }, (tokenset, done) => {
         done(new Error('user find error'));
       });
@@ -453,19 +486,26 @@ describe('OpenIDConnectStrategy', () => {
         },
       };
 
+      let resolve, reject;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+
       strategy.error = (error) => {
         try {
           expect(error.message).to.equal('user find error');
-          next();
+          resolve();
         } catch (err) {
-          next(err);
+          reject(err);
         }
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      return promise;
     });
 
-    it('triggers the fail function when verify yields no account', function (next) {
+    it('triggers the fail function when verify yields no account', async function () {
       const strategy = new Strategy({ client: this.client }, (tokenset, done) => {
         done();
       });
@@ -482,21 +522,33 @@ describe('OpenIDConnectStrategy', () => {
         },
       };
 
+      let resolve;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+      });
+
       strategy.fail = () => {
-        next();
+        resolve();
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      return promise;
     });
 
-    it('does userinfo request too if part of verify arity and resulting tokenset', function (next) {
+    it('does userinfo request too if part of verify arity and resulting tokenset', async function () {
+      let resolve, reject;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+
       const strategy = new Strategy({ client: this.client }, (tokenset, userinfo, done) => {
         try {
           expect(tokenset).to.be.ok;
           expect(userinfo).to.be.ok;
           done(null, { sub: 'foobar' });
         } catch (err) {
-          next(err);
+          reject(err);
         }
       });
 
@@ -515,13 +567,14 @@ describe('OpenIDConnectStrategy', () => {
       };
 
       strategy.success = () => {
-        next();
+        resolve();
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      return promise;
     });
 
-    it('throws when userinfo is requested but no access_token was returned', function (next) {
+    it('throws when userinfo is requested but no access_token was returned', async function () {
       const strategy = new Strategy({ client: this.client }, (tokenset, userinfo, done) => {});
 
       const ts = { id_token: 'foo' };
@@ -536,6 +589,12 @@ describe('OpenIDConnectStrategy', () => {
         },
       };
 
+      let resolve, reject;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+
       strategy.fail = (err) => {
         try {
           expect(err.name).to.equal('RPError');
@@ -543,16 +602,23 @@ describe('OpenIDConnectStrategy', () => {
             'expected access_token to be returned when asking for userinfo in verify callback',
           );
           expect(err).to.have.property('tokenset');
-          next();
+          resolve();
         } catch (e) {
-          next(e);
+          reject(e);
         }
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      return promise;
     });
 
-    it('receives a request as the first parameter if passReqToCallback is set', function (next) {
+    it('receives a request as the first parameter if passReqToCallback is set', async function () {
+      let resolve, reject;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+
       const strategy = new Strategy(
         {
           client: this.client,
@@ -564,7 +630,7 @@ describe('OpenIDConnectStrategy', () => {
             expect(tokenset).to.be.ok;
             done(null, { sub: 'foobar' });
           } catch (err) {
-            next(err);
+            reject(err);
           }
         },
       );
@@ -582,13 +648,20 @@ describe('OpenIDConnectStrategy', () => {
       };
 
       strategy.success = () => {
-        next();
+        resolve();
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      return promise;
     });
 
-    it('receives a request and userinfo with passReqToCallback: true and userinfo', function (next) {
+    it('receives a request and userinfo with passReqToCallback: true and userinfo', async function () {
+      let resolve, reject;
+      const promise = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+
       const strategy = new Strategy(
         {
           client: this.client,
@@ -601,7 +674,7 @@ describe('OpenIDConnectStrategy', () => {
             expect(userinfo).to.be.ok;
             done(null, { sub: 'foobar' });
           } catch (err) {
-            next(err);
+            reject(err);
           }
         },
       );
@@ -621,10 +694,11 @@ describe('OpenIDConnectStrategy', () => {
       };
 
       strategy.success = () => {
-        next();
+        resolve();
       };
 
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
+      return promise;
     });
   });
 });
