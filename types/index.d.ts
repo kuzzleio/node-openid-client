@@ -36,6 +36,12 @@ interface UnknownObject {
   [key: string]: unknown;
 }
 
+export interface Session {
+  get (key: string): Promise<any>;
+  set (key: string, value: any): Promise<void>;
+  delete (key: string): Promise<void>;
+}
+
 export const custom: {
   setHttpOptionsDefaults(params: HttpOptions): undefined;
   readonly http_options: unique symbol;
