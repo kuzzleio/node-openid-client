@@ -36,7 +36,7 @@ interface UnknownObject {
   [key: string]: unknown;
 }
 
-export interface Session {
+export class Session {
   get (key: string): Promise<any>;
   set (key: string, value: any): Promise<void>;
   delete (key: string): Promise<void>;
