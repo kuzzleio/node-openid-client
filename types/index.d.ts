@@ -8,6 +8,7 @@ import * as http2 from 'http2';
 import { URL } from 'url';
 import * as jose from 'jose';
 import * as crypto from 'crypto';
+import { format } from 'util';
 
 export type HttpOptions = Partial<
   Pick<
@@ -141,6 +142,8 @@ export interface EndSessionParameters {
   id_token_hint?: TokenSet | string;
   post_logout_redirect_uri?: string;
   state?: string;
+  client_id?: string;
+  logout_hint?: string;
 
   [key: string]: unknown;
 }
@@ -166,7 +169,7 @@ export interface OAuthCallbackChecks {
   state?: string;
   code_verifier?: string;
   jarm?: boolean;
-  scope?: string;
+  scope?: string; // TODO: remove in v6.x
 }
 
 export interface OpenIDCallbackChecks extends OAuthCallbackChecks {
@@ -354,7 +357,7 @@ declare class BaseClient {
       tokenType?: string;
       DPoP?: DPoPInput;
     },
-  ): { body?: Buffer } & http.IncomingMessage;
+  ): Promise<{ body?: Buffer } & http.IncomingMessage>;
   grant(body: GrantBody, extras?: GrantExtras): Promise<TokenSet>;
   introspect(
     token: string,
@@ -578,6 +581,18 @@ export namespace errors {
     scope?: string;
     session_state?: string;
     response?: { body?: UnknownObject | Buffer } & http.IncomingMessage;
+
+    constructor(
+      params: {
+        error: string;
+        error_description?: string;
+        error_uri?: string;
+        state?: string;
+        scope?: string;
+        session_state?: string;
+      },
+      response?: { body?: UnknownObject | Buffer } & http.IncomingMessage,
+    );
   }
 
   class RPError extends Error {
@@ -592,6 +607,14 @@ export namespace errors {
     exp?: number;
     iat?: number;
     auth_time?: number;
+
+    constructor(...args: Parameters<typeof format>);
+    constructor(options: {
+      message?: string;
+      printf?: Parameters<typeof format>;
+      response?: { body?: UnknownObject | Buffer } & http.IncomingMessage;
+      [key: string]: unknown;
+    });
   }
 }
 

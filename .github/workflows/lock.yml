@@ -2,16 +2,17 @@ name: 'Lock threads'
 
 on:
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '20 11 * * 1'
 
 jobs:
   lock:
+    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
-      - uses: dessant/lock-threads@v2
+      - uses: dessant/lock-threads@be8aa5be94131386884a6da4189effda9b14aa21 # v4.0.1
         with:
           github-token: ${{ github.token }}
-          issue-lock-inactive-days: '90'
+          issue-inactive-days: '90'
           issue-lock-reason: ''
-          pr-lock-inactive-days: '90'
+          pr-inactive-days: '90'
           pr-lock-reason: ''
