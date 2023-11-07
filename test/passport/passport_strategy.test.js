@@ -254,7 +254,7 @@ describe('OpenIDConnectStrategy', () => {
       );
     });
 
-    it('ignores static state coming from params', function () {
+    it('ignores static state coming from params', async function () {
       const strategy = new Strategy(
         {
           client: this.client,
@@ -269,7 +269,7 @@ describe('OpenIDConnectStrategy', () => {
       req.session = {};
 
       strategy.redirect = sinon.spy();
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
 
       expect(strategy.redirect.calledOnce).to.be.true;
       const target = strategy.redirect.firstCall.args[0];
