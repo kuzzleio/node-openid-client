@@ -104,7 +104,7 @@ describe('OpenIDConnectStrategy', () => {
     });
   });
 
-  describe('initate', function () {
+  describe('initiate', function () {
     it('starts authentication requests for GETs', async function () {
       const params = { foo: 'bar' };
       const strategy = new Strategy({ client: this.client, params }, () => {});
@@ -128,7 +128,7 @@ describe('OpenIDConnectStrategy', () => {
       );
     });
 
-    it('starts authentication requests for TPIL GETs', function () {
+    it('starts authentication requests for TPIL GETs', async function () {
       const params = { iss: 'https://op.example.com' };
       const strategy = new Strategy({ client: this.client, params }, () => {});
 
@@ -136,7 +136,7 @@ describe('OpenIDConnectStrategy', () => {
       req.session = {};
 
       strategy.redirect = sinon.spy();
-      strategy.authenticate(req);
+      await strategy.authenticate(req);
 
       expect(strategy.redirect.calledOnce).to.be.true;
       const target = strategy.redirect.firstCall.args[0];
